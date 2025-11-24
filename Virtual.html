@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>On-Campus Housing — Info Session (HTML Slideshow)</title>
+    <style>
+        :root{
+            /* Color Palette */
+            --bg: #f0f4f7; /* Lighter background */
+            --card: #ffffff;
+            --accent: #004d99; /* Primary Blue */
+            --highlight: #cc0000; /* Red for important info */
+            --border-highlight: #ffcc00; /* Yellow accent line */
+            --muted: #666;
+            --text: #222;
+            /* Dimensions & Effects */
+            --shadow: 0 8px 30px rgba(0,20,40,0.15); /* Slightly stronger shadow */
+            --radius: 12px;
+            --maxw: 1100px; /* Slightly wider frame */
+            --nav-height: 80px; /* Space reserved for the footer/navigation */
+        }
+        html,body{
+            height:100%;
+            margin:0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background:var(--bg);
+            -webkit-font-smoothing:antialiased;
+        }
+        .app {
+            height:100%;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            gap:18px;
+            padding:20px;
+            box-sizing:border-box;
+        }
+
+        /* --- Frame (Main Container) --- */
+        .frame {
+            width:min(95%, var(--maxw)); /* Increased width usage */
+            height: min(90vh, 700px); /* Set a maximum height for better presentation feel */
+            min-height: 450px; /* Increased minimum height */
+            background:var(--card);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            padding:40px 50px 0 50px; /* Padding for content, top/sides */
+            display:flex;
+            flex-direction:column;
+            box-sizing:border-box;
+            position:relative;
+            overflow:hidden;
+        }
+
+        /* --- Text Styling --- */
+        .title {
+            color:var(--accent);
+            font-size:2.0rem; /* Increased size */
+            font-weight:700;
+            margin:0 0 50px 0;
+            border-bottom:4px solid var(--border-highlight);
+            padding-bottom:15px;
+        }
+
+        .subtitle { color:var(--muted); margin:0 0 25px 0; font-size:1.15rem; font-style: italic; }
+
+        .content {
+            flex-grow:1;
+            color:var(--text);
+            font-size:1.05rem;
+            line-height:1.6;
+            padding-right: 15px; /* Space for potential scrollbar */
+            overflow-y:auto; /* Allows scrolling only for content if needed */
+        }
+        .content::-webkit-scrollbar { width: 8px; }
+        .content::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.1); border-radius: 4px; }
+
+        .content ul, .content ol { padding-left:1.5rem; margin:1rem 0 0 0; }
+        .content li { margin:0.8rem 0; }
+        .content p { margin-bottom: 1.2rem; }
+        .content strong { color: var(--accent); } /* Highlight key terms */
+
+        .muted { color:var(--muted); font-size:1rem; }
+        .small { font-size:0.95rem; color:#555; line-height:1.4; }
+
+        /* --- Slide Structure --- */
+        /* Slides are now positioned relative to the content area, not the whole frame */
+        .slide {
+            position:absolute;
+            top: 150px; /* Matches frame top padding */
+            left: 50px; /* Matches frame left padding */
+            right: 50px; /* Matches frame right padding */
+            bottom: var(--nav-height); /* Space reserved for the footer */
+            background:transparent;
+            transition:opacity .35s ease, transform .35s ease;
+            opacity:0;
+            transform:translateY(8px) scale(.995);
+            pointer-events:none;
+            display:flex;
+            flex-direction:column;
+        }
+        .slide.show { opacity:1; transform:translateY(0) scale(1); pointer-events:auto; }
+
+        .slide-content-wrapper {
+             flex: 1; /* Pushes content down if title is short */
+             min-height: 0; /* Important for flex items with overflow */
+             display: flex;
+             flex-direction: column;
+        }
+
+        /* --- Footer & Navigation --- */
+        .frame-footer {
+            height: var(--nav-height);
+            min-height: var(--nav-height);
+            width: 100%;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            padding-top:15px;
+            border-top: 1px solid #e0e6eb; /* Separator line */
+        }
+
+        .nav {
+            display:flex;
+            gap:14px; /* Increased gap */
+            align-items:center;
+        }
+        .btn {
+            background:var(--accent);
+            color:white;
+            border:none;
+            padding:12px 18px; /* Increased padding */
+            border-radius:9px;
+            cursor:pointer;
+            font-weight:600;
+            font-size:1rem;
+            transition:background 0.2s, transform 0.1s, opacity 0.2s;
+            box-shadow:0 4px 10px rgba(0,77,153,0.2);
+        }
+        .btn:hover:not(:disabled) { background: #0060c0; transform: translateY(-1px); }
+        .btn:disabled{opacity:0.4; cursor:default; box-shadow:none}
+        .btn.ghost {
+            background:transparent;
+            color:var(--accent);
+            border:1px solid var(--accent);
+            box-shadow:none;
+        }
+        .btn.ghost:hover:not(:disabled) { background: rgba(0,77,153,0.05); }
+
+        .progress {
+            display:flex;
+            gap:10px;
+            align-items:center;
+            color:var(--muted);
+            font-weight:600;
+            font-size:1rem;
+        }
+
+        .dots { display:flex; gap:8px; align-items:center; margin-left:15px; }
+        .dot {
+            width:10px;height:10px;border-radius:99px;background:rgba(0,0,0,0.15);
+            transition:all .2s ease;
+        }
+        .dot.active { background:var(--accent); transform:scale(1.2); }
+
+        /* --- Responsive Tweaks --- */
+        @media (max-width:800px){
+            .frame{ padding:25px 20px 0 20px; width:100%; }
+            .slide{ left:20px; right:20px; }
+            .title{ font-size:1.6rem }
+            .subtitle { font-size:1rem; margin-bottom: 20px; }
+            .content{ font-size:0.95rem }
+            .btn{ padding:8px 10px; font-size:0.9rem; }
+            .frame-footer{ flex-wrap:wrap; justify-content:center; gap:8px; height:auto; min-height:auto; padding-bottom: 15px; }
+            .nav { gap:8px; }
+            .progress { font-size:0.9rem; margin-top: 5px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="frame" role="region" aria-label="On-Campus Housing Presentation">
+
+            <div class="slide show" data-slide="1" id="slide-1">
+                <h1 class="title">On-Campus Housing: Information Session</h1>
+                <div class="subtitle muted">Welcome — Quick Overview</div>
+                <div class="slide-content-wrapper">
+                    <div class="content">
+                        <p>This presentation provides an overview of essential **on-campus housing** topics.</p>
+                        <p style="margin-top: 40px; font-size: 1.1em; font-weight: 500;">
+                            We are committed to helping you transition smoothly into university life and addressing your key concerns before you arrive.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide" data-slide="2" id="slide-2">
+                <h1 class="title">Purpose of This Session</h1>
+                <div class="subtitle muted">Addressing Your Queries</div>
+                <div class="slide-content-wrapper">
+                    <div class="content">
+                        <p>We have been receiving numerous questions regarding on-campus housing, and this session is specifically designed to address them comprehensively and efficiently.</p>
+                        <p>Our goal is to clarify policies, provide key dates, and offer solutions to common student concerns.</p>
+                        <p style="margin-top: 30px;">
+                            We will further discuss any individual questions you have during this meeting.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide" data-slide="3" id="slide-3">
+                <h1 class="title">Main Topics to Be Covered</h1>
+                <div class="subtitle muted">Key areas we will walk through</div>
+                <div class="slide-content-wrapper">
+                    <div class="content">
+                        <ul>
+                            <li><strong>Meal Plans</strong> — Understanding your dining options and sign-up process.</li>
+                            <li><strong>Dorm Check-In</strong> — The step-by-step process for a smooth arrival.</li>
+                            <li><strong>On-Campus Life</strong> — Exploring student activities and getting involved.</li>
+                            <li><strong>Mailing Address</strong> — How to receive your important mail and packages.</li>
+                            <li><strong>Dorm Key Collection</strong> — Detailed information on where and when to get your keys.</li>
+                            <li><strong>Early Arrival Options</strong> — Solutions and approval process for early arrivals.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide" data-slide="4" id="slide-4">
+                <h1 class="title">Meal Plan Overview</h1>
+                <div class="subtitle muted">Understanding Your Options</div>
+                <div class="slide-content-wrapper">
+                    <div class="content">
+                        <p>Our meal plans offer flexibility and variety to suit every student's needs. Freshmen students who will live on-campus are automatically added to an on-campus meal plan.</p>
+                        <h4 style="margin-top:20px; color:var(--accent);">Special Meal Options For International Students:</h4>
+                        <p>The Special Meal Plan is designed to provide international students with affordable and flexible meal choices that cater to their specific needs — allowing a balance of on-campus dining and cooking for themselves.</p>
+                        <p class="small">
+                            <strong>Full Meal Plan Options:</strong> <a href="https://latech.mydininghub.com/en/meal-plans/meal-plan-options" target="_blank" rel="noopener">latech.mydininghub.com — meal plan options</a>
+                        </p>
+                        <p class="small">
+                            <strong>Special Meal Plan Application:</strong> <a href="https://forms.gle/4pKZCUBvmtuyZagn9" target="_blank" rel="noopener">https://forms.gle/4pKZCUBvmtuyZagn9</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide" data-slide="5" id="slide-5">
+                <h1 class="title">Dorm Check-In Process</h1>
+                <div class="subtitle muted">What to expect on arrival</div>
+                <div class="slide-content-wrapper">
+                    <div class="content">
+                        <ol>
+                            <li><strong>Official Check-In Time</strong><br>
+                                Check-ins will begin at 9:00 AM on Monday, December 1, 2025. All students should report to Wyly Tower 227 to pick up their key.</li>
+                            <li><strong>Verify Room Assignment (StarRez)</strong><br>
+                                Log in to your StarRez account before arriving to see which room has been assigned to you.</li>
+                            <li><strong>Early Arrival Options</strong><br>
+                               <u><b>1. Book Motel:</b></u> If you are arriving early, you may book a motel for your stay till check-in date. Here are some motel options in Ruston such as Super 8 by Wyndham Ruston. <a href="https://www.booking.com/searchresults.en-gb.html?aid=2419970&label=metagha-link-LUUS-hotel-1011897_dev-desktop_los-1_bw-2_dow-Tuesday_defdate-1_room-0_gstadt-2_rateid-public_aud-0_gacid-21404717496_mcid-10_ppa-1_clrid-0_ad-1_gstkid-0_checkin-20251125_ppt-_lp-2840_r-10463025060596779822&utm_medium=localuniversal&hca=m&no_rooms=1&show_room=101189708_375402078_2_1_0&utm_content=dev-desktop_los-1_bw-2_dow-Tuesday_defdate-1_room-0_gstadt-2_rateid-public_aud-0_gacid-21404717496_mcid-10_ppa-1_clrid-0_ad-1_gstkid-0_checkin-20251125_ppt-&utm_campaign=US&edgtid=Yx6aW_dVTt-TsOHUFBQBMw&utm_term=hotel-1011897&gclid=CjwKCAiA_orJBhBNEiwABkdmjHuAmM4LES0r0UvKHnTWf56Mk9Q05vC-FTgTXBbGpm60v9cg1SCicBoC9UcQAvD_BwE&ext_price_total=92.23&efpc=ebAKkrI6Lw&utm_source=metagha&ts=1763947230&highlighted_hotels=1011897&checkin=2025-11-25&redirected=1&dest_type=hotel&hlrd=with_dates&group_adults=2&dest_id=1011897&source=hotel&group_children=0&checkout=2025-11-26&keep_landing=1&sid=70cca671489798a8fbced1937787ca83" target="_blank" rel="noopener">Click here to see more options</a>.<br>                 
+                                <u><b>2. Special Permission:</b></u> If you have special permission from Housing department (e.g., approved early check-in), you might collect your dorm keys from the LA Tech Police Department. Please contact the housing deparment whether you have to pay any additional fee if you have special permission for early check-in.</li>
+                        </ol>
+                    </div> 
+                </div>
+            </div>
+
+            <div class="slide" data-slide="6" id="slide-6">
+                <h1 class="title">Mailing Address for Students</h1>
+                <div class="subtitle muted">How to receive mail & packages successfully</div>
+                <div class="slide-content-wrapper">
+                    <div class="content">
+                        <p><strong>On-Campus Student Mailing Address Format (Example):</strong></p>
+                        <pre style="background: #f8f8f8; padding: 15px; border-radius: 6px; font-size: 0.95em; color: #333; overflow-x: auto;">
+[Recipient's First and Last Name] (Required — must match Student ID name)
+305 Wisteria St.
+Ruston, LA 71272
+                        </pre>
+                        <h4 style="margin-top:20px; color:var(--accent);">Package Collection Centre Policy</h4>
+                        <p>Students must present their student ID card to pick up packages. For security and privacy, only the person to whom the package is addressed may receive the package.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide" data-slide="7" id="slide-7">
+                <h1 class="title">On-Campus Life & Resources</h1>
+                <div class="subtitle muted">Get involved & available student support</div>
+                <div class="slide-content-wrapper">
+                    <div class="content">
+                        <p><strong>Student Involvement:</strong> With over 180 student organizations, there are many ways for students to get involved at Louisiana Tech University. Explore health & wellness at the Lambright Sports and Wellness Center and connect with study groups.</p>
+
+                        <h4 style="margin-top:20px; color:var(--accent);">Key Available Resources</h4>
+                        <ul style="columns: 2; -webkit-columns: 2; -moz-columns: 2;">
+                            <li>BARC (Academic Support)</li>
+                            <li>Career Center</li>
+                            <li>Counseling Services</li>
+                            <li>Tech Care</li>
+                            <li>Intramural Sports and Recreation — <a href="https://www.latech.edu/student-life/student-support-and-resources/intramural-sports-recreation/index.php" target="_blank" rel="noopener">learn more</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="slide" data-slide="8" id="slide-8">
+                <h1 class="title">Thank You!</h1>
+                <div class="subtitle muted">Housing & Contact Information</div>
+                <div class="slide-content-wrapper">
+                    <div class="content">
+                        <p>We appreciate your attendance and engagement in this important informational session. We look forward to welcoming you to campus!</p>
+
+                        <h4 style="margin-top:30px; color:var(--accent);">Housing Department Contact Info</h4>
+                        <p class="small">
+                            For further inquiries regarding housing, please reach out to:<br>
+                            <a href="mailto:housing@latech.edu" style="font-weight: 600;">housing@latech.edu</a>
+                        </p>
+                        <p class="small">
+                            Visit the housing portal for more information:<br>
+                            <a href="https://www.latech.edu/student-life/housing-and-dining/housing/index.php" target="_blank" rel="noopener">LA Tech — Housing & Dining</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="frame-footer">
+                <div class="progress">
+                    <div id="slideLabel" style="font-weight:700;color:var(--accent)">Slide 1 of 8</div>
+                    <div class="dots" id="dotsContainer" aria-hidden="true">
+                        </div>
+                </div>
+
+                <div class="nav">
+                    <button class="btn ghost" id="firstBtn" title="Go to first slide">« First</button>
+                    <button class="btn ghost" id="prevBtn" title="Previous slide">‹ Prev</button>
+                    <button class="btn" id="nextBtn" title="Next slide">Next ›</button>
+                    <button class="btn ghost" id="lastBtn" title="Go to last slide">Last »</button>
+                </div>
+            </div>
+        </div>
+
+        <div style="max-width:var(--maxw); width:95%; display:flex; justify-content:space-between; color:var(--muted); font-size:0.95rem">
+            <div class="muted">On-Campus Housing Presentation (8 Slides)</div>
+            <div class="muted">Tip: use ← and → keys to navigate</div>
+        </div>
+    </div>
+
+    <script>
+        (function(){
+            const slides = Array.from(document.querySelectorAll('.slide'));
+            const total = slides.length;
+            let idx = 0;
+
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const firstBtn = document.getElementById('firstBtn');
+            const lastBtn = document.getElementById('lastBtn');
+            const slideLabel = document.getElementById('slideLabel');
+            const dotsContainer = document.getElementById('dotsContainer');
+
+            // create dots
+            for(let i=0;i<total;i++){
+                const d = document.createElement('div');
+                d.className = 'dot' + (i===0 ? ' active' : '');
+                d.dataset.index = i;
+                d.style.cursor = 'pointer';
+                d.title = 'Go to slide ' + (i+1);
+                d.addEventListener('click', () => goTo(parseInt(d.dataset.index)) );
+                dotsContainer.appendChild(d);
+            }
+
+            function show(){
+                // Hide/Show slides
+                slides.forEach((s, i) => {
+                    s.classList.toggle('show', i === idx);
+                    // Ensure content is scrolled to top on change
+                    const content = s.querySelector('.content');
+                    if (content) content.scrollTop = 0;
+                });
+                
+                // update buttons
+                prevBtn.disabled = idx === 0;
+                firstBtn.disabled = idx === 0;
+                nextBtn.disabled = idx === total - 1;
+                lastBtn.disabled = idx === total - 1;
+
+                // update label & dots
+                slideLabel.textContent = 'Slide ' + (idx+1) + ' of ' + total;
+                document.querySelectorAll('.dot').forEach((d,i) => d.classList.toggle('active', i===idx));
+            }
+
+            function goTo(i){
+                if(i < 0) i = 0;
+                if(i > total-1) i = total-1;
+                idx = i;
+                show();
+            }
+
+            prevBtn.addEventListener('click', () => goTo(idx - 1));
+            nextBtn.addEventListener('click', () => goTo(idx + 1));
+            firstBtn.addEventListener('click', () => goTo(0));
+            lastBtn.addEventListener('click', () => goTo(total - 1));
+
+            // keyboard navigation
+            document.addEventListener('keydown', (e) => {
+                if(e.key === 'ArrowRight') goTo(idx + 1);
+                if(e.key === 'ArrowLeft') goTo(idx - 1);
+                if(e.key === 'Home') goTo(0);
+                if(e.key === 'End') goTo(total - 1);
+            });
+
+            // touch/swipe support (basic)
+            let touchStart = null;
+            const frame = document.querySelector('.frame');
+            frame.addEventListener('touchstart', (ev) => { touchStart = ev.changedTouches[0].clientX; }, {passive:true});
+            frame.addEventListener('touchend', (ev) => {
+                if(touchStart === null) return;
+                const diff = ev.changedTouches[0].clientX - touchStart;
+                if(diff < -50) goTo(idx + 1);
+                if(diff > 50) goTo(idx - 1);
+                touchStart = null;
+            }, {passive:true});
+
+            // initial render
+            show();
+
+            window.goToSlide = goTo;
+        })();
+    </script>
+</body>
+</html>
